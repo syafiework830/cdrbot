@@ -25,6 +25,13 @@ def bot_model(text, indexname, chat_history):
     CDR_AZURE_COGNITIVE_SEARCH_SERVICE_NAME = os.environ.get("CDR_AZURE_COGNITIVE_SEARCH_SERVICE_NAME")
     CDR_AZURE_COGNITIVE_SEARCH_API_KEY = os.environ.get("CDR_AZURE_COGNITIVE_SEARCH_API_KEY")
     
+    print(
+        f"1: {AZURE_API_KEY}",
+        f"2: {AZURE_OPENAI_ENDPOINT}",
+        f"3: {CDR_AZURE_COGNITIVE_SEARCH_SERVICE_NAME}",
+        f"4: {CDR_AZURE_COGNITIVE_SEARCH_API_KEY}"
+    )
+
     # Initialize embedding model
     embedding = AzureOpenAIEmbeddings(
         model="text-embedding-3-small",

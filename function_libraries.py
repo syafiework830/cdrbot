@@ -1,15 +1,11 @@
-from langchain_community.document_loaders.pdf import PyPDFLoader
-from langchain_text_splitters import RecursiveCharacterTextSplitter
 import os, dotenv
-from langchain_community.vectorstores import AzureSearch
-from typing import List
+from typing import List, Any
 from pydantic import BaseModel, Field
 from langchain.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.schema import Document
 from langchain.output_parsers.openai_tools import JsonOutputKeyToolsParser
 from operator import itemgetter
-from langchain.schema.runnable import RunnableParallel, RunnablePassthrough, RunnableLambda
-from langchain.schema.output_parser import StrOutputParser
+from langchain.schema.runnable import RunnableParallel, RunnableLambda
 
 dotenv.load_dotenv()
 
@@ -24,7 +20,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.prompts import MessagesPlaceholder
 from langchain.schema import Document
 
-def sort_similarity_results_by_date(results, reverse=True):
+def sort_similarity_results_by_date(results: List, reverse: bool=True):
     """
     Sort similarity search results by date in metadata
     
