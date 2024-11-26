@@ -9,320 +9,91 @@ st.set_page_config(
 )
 
 # Custom CSS with updated styling
-st.markdown("""
-    <style>
-    .stApp {
-        background-color: #FAFAFA;
-        color: #f0f2f6;
-    }
+st.markdown('''
+<style>
+/* General App Styling */
+.stApp {
+    background-color: #FAFAFA;
+    color: #f0f2f6;
+}
 
-    [data-baseweb="textarea"] {
-        color: #17202a;
-    }
-    
-    /* Improved message content styling */
-    .message-content {
-        max-width: 80%;
-        padding: 15px;
-        border-radius: 10px;
-        white-space: pre-wrap;
-        word-break: break-word;
-        line-height: 1.5;
-    }
+/* Textarea Styling */
+[data-baseweb="textarea"] {
+    color: #17202a;
+}
 
-    /* List styling within messages */
-    .message-content ul {
-        list-style-type: none;
-        padding-left: 0;
-        margin: 10px 0;
-    }
+/* Message Content Styling */
+.message-content {
+    max-width: 80%;
+    padding: 20px;
+    border-radius: 10px;
+    line-height: 1.8;
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 8px 0;
+}
 
-    .message-content li {
-        margin: 8px 0;
-        padding-left: 20px;
-        position: relative;
-    }
+/* User and Bot Message Containers */
+.user-message-container, .bot-message-container {
+    display: flex;
+    margin: 8px 0;
+    width: 100%;
+}
 
-    .message-content li:before {
-        content: "•";
-        position: absolute;
-        left: 0;
-        color: inherit;
-    }
+.user-message-container {
+    justify-content: flex-end;
+}
 
-    /* Key points section styling */
-    .key-points {
-        margin-top: 15px;
-        padding-top: 10px;
-        border-top: 1px solid rgba(255, 255, 255, 0.2);
-    }
+.bot-message-container {
+    justify-content: flex-start;
+}
 
-    .key-points-title {
-        font-weight: bold;
-        margin-bottom: 8px;
-    }
+/* User and Bot Message Styling */
+.user-message {
+    background-color: #ECEBEC;
+    color: #000000;
+    margin-left: 20%;
+}
 
-    /* Numbered list styling */
-    .numbered-list {
-        counter-reset: item;
-        list-style-type: none;
-        padding-left: 0;
-    }
+.assistant-message {
+    background-color: #6B7DBA;
+    color: #FFFFFF;
+    margin-right: 20%;
+}
 
-    .numbered-list li {
-        counter-increment: item;
-        margin: 10px 0;
-        padding-left: 25px;
-        position: relative;
-    }
+/* Button Styling */
+.stButton > button {
+    background-color: #ffffff !important;
+    color: black !important;
+    border: 2px solid #6B7DBA !important;
+    padding: 2px 6px !important;
+    border-radius: 4px !important;
+    font-size: 0.8rem !important;
+    min-height: 0px !important;
+    height: auto !important;
+    line-height: 1.2 !important;
+    margin: 4px 0 !important;
+}
 
-    .numbered-list li:before {
-        content: counter(item) ".";
-        position: absolute;
-        left: 0;
-        font-weight: bold;
-    }
+/* Reference Section Styling */
+.reference-container {
+    background-color: #ffffff;
+    color: black;
+    border: 2px solid #6B7DBA;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
 
-    /* Message container styling */
-    .user-message-container {
-        display: flex;
-        justify-content: flex-end;
-        width: 100%;
-        margin-bottom: 1rem;
-    }
+/* Key Points Section Styling */
 
-    .bot-message-container {
-        display: flex;
-        justify-content: flex-start;
-        width: 100%;
-        margin-bottom: 1rem;
-    }
-
-    .user-message {
-        background-color: #ECEBEC;
-        color: #000000;
-        margin-left: 20%;
-    }
-
-    .assistant-message {
-        background-color: #6B7DBA;
-        color: #FFFFFF;
-        margin-right: 20%;
-    }
-
-    /* Reference button styling */
-    .stButton > button {
-        background-color: #ffffff !important;
-        color: black !important;
-        border: 2px solid #6B7DBA !important;
-        padding: 2px 6px !important;
-        border-radius: 4px !important;
-        font-size: 0.8rem !important;
-        min-height: 0px !important;
-        height: auto !important;
-        line-height: 1.2 !important;
-        margin: 4px 0 !important;
-    }
-
-    .reference-container {
-        background-color: #ffffff;
-        color: black;
-        border: 2px solid #6B7DBA;
-        padding: 12px;
-        margin: 10px 0;
-        border-radius: 4px;
-        font-size: 0.9rem;
-    }
-            
-    /* Styling for key points and bullet lists */
-    .key-points {
-        margin-top: 15px;
-        padding-top: 10px;
-        border-top: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .key-points ul {
-        padding-left: 20px;
-        margin: 10px 0;
-    }
-
-    .key-points ul li {
-        margin-bottom: 8px;
-        line-height: 1.5;
-    }
-            
-    /* Message content styling */
-    .message-content {
-        max-width: 80%;
-        padding: 15px;
-        border-radius: 10px;
-        line-height: 1.5;
-    }
-
-    .message-content p {
-        margin: 0 0 10px 0;
-    }
-
-    /* Numbered list styling */
-    .message-content ol.numbered-list {
-        list-style-type: none;
-        counter-reset: item;
-        margin: 10px 0;
-        padding-left: 0;
-    }
-
-    .message-content ol.numbered-list li {
-        counter-increment: item;
-        margin: 8px 0;
-        padding-left: 25px;
-        position: relative;
-    }
-
-    .message-content ol.numbered-list li::before {
-        content: counter(item) ".";
-        position: absolute;
-        left: 0;
-        font-weight: bold;
-    }
-            
-    /* Message content styling */
-    .message-content {
-        max-width: 80%;
-        padding: 12px;
-        border-radius: 10px;
-        line-height: 1.4;
-    }
-
-    /* Introduction paragraph */
-    .message-content .intro {
-        margin: 0 0 8px 0;
-    }
-
-    /* Compact numbered list styling */
-    .message-content .compact-list {
-        list-style-type: none;
-        counter-reset: item;
-        margin: 0;
-        padding-left: 0;
-    }
-
-    .message-content .compact-list li {
-        counter-increment: item;
-        margin: 4px 0;
-        padding-left: 25px;
-        position: relative;
-    }
-
-    .message-content .compact-list li::before {
-        content: counter(item) ".";
-        position: absolute;
-        left: 0;
-        font-weight: bold;
-    }
-
-    /* Bold text styling */
-    .message-content strong {
-        font-weight: 600;
-    }
-
-    /* Container styling */
-    .bot-message-container, .user-message-container {
-        margin-bottom: 8px;
-    }
-            
-            /* Updated numbered list styling */
-    .numbered-list {
-        list-style-type: none;
-        padding-left: 0;
-        margin: 0;
-    }
-
-    .numbered-list li {
-        padding: 4px 0;
-        padding-left: 25px;
-        position: relative;
-        line-height: 1.4;
-    }
-
-    .numbered-list li:before {
-        content: counter(item) ".";
-        counter-increment: item;
-        position: absolute;
-        left: 0;
-        font-weight: bold;
-    }
-
-    /* Message content updates */
-    .message-content {
-        max-width: 80%;
-        padding: 12px;
-        border-radius: 10px;
-        line-height: 1.4;
-    }
-
-    .message-content p {
-        margin: 0;
-        line-height: 1.4;
-    }
-
-    /* Specific styling for assistant messages */
-    .assistant-message .numbered-list li {
-        color: #FFFFFF;
-        margin: 4px 0;
-    }
-            
-    /* Numbered list styling */
-    .numbered-list {
-        list-style-type: none;
-        padding-left: 0;
-        margin: 8px 0;
-    }
-
-    .numbered-list li {
-        padding: 4px 0;
-        padding-left: 25px;
-        position: relative;
-        line-height: 1.4;
-    }
-
-    .numbered-list li:before {
-        content: counter(item) ".";
-        counter-increment: item;
-        position: absolute;
-        left: 0;
-        font-weight: bold;
-    }
-
-    /* Message content updates */
-    .message-content {
-        max-width: 80%;
-        padding: 12px 16px;
-        border-radius: 10px;
-        line-height: 1.4;
-        margin: 8px 0;
-    }
-
-    .message-content p {
-        margin: 8px 0;
-        line-height: 1.4;
-    }
-
-    /* Specific styling for assistant messages */
-    .assistant-message .numbered-list li {
-        color: #FFFFFF;
-        margin: 4px 0;
-        white-space: normal;
-        word-wrap: break-word;
-        overflow-wrap: break-word;
-    }
-
-    /* Container adjustments */
-    .bot-message-container, .user-message-container {
-        padding: 4px 0;
-        margin: 8px 0;
-    }        
-    </style>
-    """, unsafe_allow_html=True)
+/* Bold Text Styling */
+.message-content strong {
+    font-weight: 600;
+}
+</style>
+''', unsafe_allow_html=True)
 
 
 # Initialize session states
@@ -340,9 +111,9 @@ with st.sidebar:
     search_query = st.chat_input("Search client...")
     
     options = [
-        "Shellpoint Mortgage", "Nationstar Mortgage", "M&T Bank", "Freedom Mortgage", "JP Morgan Chase Bank",
-        "Fay Servicing", "PHH Corporation", "Flagstar Bank", "Pennymac Loan Services", "US Bank"
+        "Shellpoint Mortgage", "Nationstar Mortgage", "M&T Bank", "Fannie Mae", "Freddie Mac"
     ]
+    #"Freedom Mortgage", "JP Morgan Chase Bank","Fay Servicing", "PHH Corporation", "Flagstar Bank", "Pennymac Loan Services", "US Bank"
 
     filtered_options = [option for option in options if search_query and search_query.lower() in option.lower()] if search_query else options
 
@@ -395,7 +166,7 @@ def format_message_content(content):
                 formatted_items.append(cleaned_line)
                 
         return f"""
-            <ol class="numbered-list" style="margin-top: 8px; margin-bottom: 8px;">
+            <ol class="numbered-list" style="margin-top: 0px; margin-bottom: 0px;">
                 {''.join(f'<li>{item}</li>' for item in formatted_items)}
             </ol>
         """
@@ -419,7 +190,7 @@ def display_message(role, content, message_id, references=None):
             with col1:
                 st.markdown(f"""
                     <div class="user-message-container">
-                        <div class="message-content user-message">{format_message_content(content)}</div>
+                        <div class="message-content user-message">{content}</div>
                     </div>
                 """, unsafe_allow_html=True)
             with col2:
@@ -429,10 +200,10 @@ def display_message(role, content, message_id, references=None):
             with col1:
                 st.image(bot_avatar_path, width=40)
             with col2:
-                formatted_content = format_message_content(content)
+                # Display content directly for assistant's message
                 st.markdown(f"""
                     <div class="bot-message-container">
-                        <div class="message-content assistant-message">{formatted_content}</div>
+                        <div class="message-content assistant-message">{content}</div>
                     </div>
                 """, unsafe_allow_html=True)
                 
@@ -452,6 +223,7 @@ def display_message(role, content, message_id, references=None):
                         st.markdown(f"""
                             <div class="reference-container">{references}</div>
                         """, unsafe_allow_html=True)
+
 # Display chat history
 for idx, message in enumerate(st.session_state.chat_history):
     display_message(
@@ -472,20 +244,26 @@ if text:
 
 if st.session_state.chat_history and st.session_state.chat_history[-1]["role"] == "user":
     last_user_message = st.session_state.chat_history[-1]["content"]
+    
+    # Get the bot's response
     bot_response = bot_model(last_user_message, indexname, st.session_state.chat_history)
     
-    bot_answer = bot_response[0].replace("AI: ","").replace(": ","")
+    # Prepare the bot's answer and references
+    bot_res = bot_response[0].replace("AI: ","").replace(": ","").replace("Assistant","").replace('\n\n','\n')
+    import re
+    bot_answer = re.sub(r"\*\*(.*?)\*\*", r"<b>\1</b>", bot_res)
     references = bot_response[1].replace(
-                                        "@Tag4DateRetrieved@", "\n:red[Date Document Retrieved ]"
-                                        ).replace(
-                                        "@Tag4Source@", "\n\n\n:red[Source ]"
-                                        ).replace(
-                                        "@Tag4pagenum@", "\n\n\n:red[Page ]"
-                                        ).replace(
-                                        "@Tag4Citation@", "\n\n:red[Citation ]"
-                                        ).replace(
-                                        "Reference :","<b>Reference :<b>")
+        "@Tag4DateRetrieved@", "\n:red[Date Document Retrieved ]"
+    ).replace(
+        "@Tag4Source@", "\n\n\n:red[Source ]"
+    ).replace(
+        "@Tag4pagenum@", "\n\n\n:red[Page ]"
+    ).replace(
+        "@Tag4Citation@", "\n\n:red[Citation ]"
+    ).replace(
+        "Reference :","<b>Reference :<b>")
 
+    # Append the bot's response to chat history
     message_id = len(st.session_state.chat_history)
     
     st.session_state.chat_history.append({
@@ -494,4 +272,5 @@ if st.session_state.chat_history and st.session_state.chat_history[-1]["role"] =
         "references": references
     })
 
+    # Display the bot's response
     display_message("assistant", bot_answer, message_id, references)

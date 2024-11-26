@@ -88,6 +88,10 @@ def get_indexname(client):
             return "cdr-nationstar"
         case "M&T Bank":
             return "cdr-mtbank"
+        case "Fannie Mae":
+            return "cdr-fannymae"
+        case "Freddie Mac":
+            return "cdr-freddiemac"
         case _:
             return "Please choose a valid client!"
 
@@ -104,6 +108,8 @@ class cited_answer(BaseModel):
         description="The integer IDs of the SPECIFIC sources which justify the answer.",
     )
     
+import re
+
 def format_rag_response_new_grouped(response):
     """
     Format RAG response with answer and multiple citations in a readable format.
@@ -111,25 +117,18 @@ def format_rag_response_new_grouped(response):
     """
     output = response['output']
     formatted_citations = ""
-    
+
+    def format_text(text):
+        """
+        Apply consistent formatting for bullet points and numbered lists.
+        """
+        # Add extra newline before bullets, dashes, and numbered lists
+        text = re.sub(r"\n(\d+)\.", r"\n\n\1.", text)  # Handles numbered lists like 1., 2., 3.
+        text = re.sub(r"\n([•▪-])", r"\n\n\1", text)   # Handles bullets like •, ▪, or -
+        return text
+
     if 'cited_answer' in output:
-        # Format the answer to ensure proper bullet point spacing
-        answer = output['cited_answer']['answer']
-        # Add extra newline before and after bullet points and numbered lists
-        answer = (answer.replace("\n•", "\n\n•")
-                      .replace("\n▪", "\n\n▪")
-                      .replace("\n-", "\n\n-")
-                      .replace("\n1.", "\n\n1.")
-                      .replace("\n2.", "\n\n2.")
-                      .replace("\n3.", "\n\n3.")
-                      .replace("\n4.", "\n\n4.")
-                      .replace("\n5.", "\n\n5.")
-                      .replace("\n6.", "\n\n6.")
-                      .replace("\n7.", "\n\n7.")
-                      .replace("\n8.", "\n\n8.")
-                      .replace("\n9.", "\n\n9.")
-                      .replace("\n10.", "\n\n10."))
-        
+        answer = format_text(output['cited_answer']['answer'])
         citations = output['cited_answer']['citations']
         docs = output['docs']
 
@@ -137,15 +136,10 @@ def format_rag_response_new_grouped(response):
             for idx, citation_idx in enumerate(citations):
                 if citation_idx < len(docs):
                     doc = docs[citation_idx]
-                    # Format citation content with proper bullet point spacing
-                    citation = (doc.page_content.replace('\n', ' ')
-                                              .strip()
-                                              .replace("•", "\n\n•")
-                                              .replace("▪", "\n\n▪")
-                                              .replace("-", "\n\n-"))
-                    
+                    citation = format_text(doc.page_content.replace('\n', ' ').strip())
+
                     source_snippet = doc.metadata.get('source', 'Unknown source')
-                    date_retrieved = source_snippet.split(" - ")[0].replace("_","/")
+                    date_retrieved = source_snippet.split(" - ")[0].replace("_", "/")
                     source = source_snippet.split(" - ")[1]
                     page = doc.metadata.get('pageNum', 'Unknown page')
                     similarity_score = doc.metadata.get('similarity_score', None)
@@ -156,29 +150,16 @@ def format_rag_response_new_grouped(response):
                     formatted_citations += f"@Tag4Source@: {source}\n"
                     formatted_citations += f"@Tag4pagenum@: {page}\n"
                     formatted_citations += f"@Tag4Citation@: {citation}\n\n"
-                    formatted_citations += "="*75 
+                    formatted_citations += "=" * 75
                     formatted_citations += "\n\n"
             
             return answer, formatted_citations.strip()
         
         return answer, formatted_citations
     else:
-        # Format simple answers with proper bullet point spacing
-        answer = output['answer']
-        answer = (answer.replace("\n•", "\n\n•")
-                      .replace("\n▪", "\n\n▪")
-                      .replace("\n-", "\n\n-")
-                      .replace("\n1.", "\n\n1.")
-                      .replace("\n2.", "\n\n2.")
-                      .replace("\n3.", "\n\n3.")
-                      .replace("\n4.", "\n\n4.")
-                      .replace("\n5.", "\n\n5.")
-                      .replace("\n6.", "\n\n6.")
-                      .replace("\n7.", "\n\n7.")
-                      .replace("\n8.", "\n\n8.")
-                      .replace("\n9.", "\n\n9.")
-                      .replace("\n10.", "\n\n10."))
+        answer = format_text(output['answer'])
         return answer, formatted_citations
+
 
 def create_rag_chain_with_score(vectorstore, llm_model):
     """
@@ -206,10 +187,11 @@ def create_rag_chain_with_score(vectorstore, llm_model):
     
     # Create prompts
     base_prompt = ChatPromptTemplate.from_messages([
-        ("system", "Answer the question based on the following context: {context}. If the answer has bullet points or numbering points, please distinguish each on a new line.Example: 1.<content> 2.<content> or in this '-','▪','•' "),
+        ("system", "Answer the question based on the following context: {context}. Format the response such that each bullet point ('-', '▪', '•') or numbered point ('1.', '2.') starts on a new line. Do not add extra blank lines."),
         MessagesPlaceholder(variable_name="chat_history"),
         ("human", "{question}")
-    ])
+        ])
+
     
     simple_response_prompt = ChatPromptTemplate.from_messages([
         MessagesPlaceholder(variable_name="chat_history"),
