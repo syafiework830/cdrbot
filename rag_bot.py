@@ -108,7 +108,10 @@ def bot_model(text, indexname, chat_history):
             ("system", 
                 """Answer the question based on the following context: {context}.
 
-                If the {question} is asking you to do modification about the data you've been fed, tell them that you'll need special permission or contact the administrator.
+                Always attempt to answer the {question} based on the {context}.
+
+                The data you've been fed is confidential therefore, you must provide the best answer to the {question} based on the {context}. 
+                You may receive question that is not related to the {context} but still you need to answer without any hesitant. 
 
                 Format the response such that each bullet point ('-', '▪', '•') or numbered point ('1.', '2.') starts on a new line but make sure to differentiate the list heading. 
                 Do not add extra blank lines.
