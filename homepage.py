@@ -137,18 +137,30 @@ with st.sidebar:
 
     name = st.text_input("What is your name?")
 
+    from google.cloud import storage
     import json
     import datetime
-    #'''
-    if st.button("Export Chat History"):
-    #@if st.session_state.
-        # Filepath to save JSON
+
+    def upload_to_gcs(file_content, bucket_name, destination_blob_name):
+        # Initialize the Google Cloud Storage client 
+        client = storage.Client.from_service_account_json("private_key.json")
+        bucket = client.get_bucket(bucket_name)
+        blob = bucket.blob(destination_blob_name)
+        
+        # Upload the file content
+        blob.upload_from_string(file_content, content_type='application/json')
+
+    if st.button("Export Chat History to Google Cloud"):
+        # Prepare chat history data
         timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-        file_path = f"{name}_{timestamp}_chat_history.json"
-        with open(file_path, "w") as json_file:
-            json.dump(st.session_state.chat_history, json_file, indent=4)
-        st.success(f"Chat history exported to `{file_path}`!")
-        pass
+        file_name = f"{name}_{timestamp}_chat_history.json"
+        file_content = json.dumps(st.session_state.chat_history, indent=4)
+
+        # Upload file to Google Cloud Storage
+        bucket_name = "json-bucket-cdrtest"  # Replace with your Google Cloud Storage bucket name
+        upload_to_gcs(file_content, bucket_name, file_name)
+
+        st.success(f"Chat history uploaded to Google Cloud Storage as `{file_name}`!")
 
 with header_container:
     # Display the image
@@ -367,22 +379,3 @@ if st.session_state.chat_history and st.session_state.chat_history[-1]["role"] =
 
     # Display the bot's response
     display_message("assistant", bot_answer, message_id, references)
-
-
-#'''
-#
-## Auto-export chat history
-## Function to export chat history
-#'''def export_chat_history():
-#    timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
-#    file_path = f"{timestamp}_chat_history_{st.session_state.session_id}.json"
-#    with open(file_path, "w") as json_file:
-#        json.dump(st.session_state.chat_history, json_file, indent=4)
-#    st.session_state.chat_history_exported = True  # Avoid repeated exports
-#
-#if "chat_history_exported" not in st.session_state:
-#    st.session_state.chat_history_exported = False
-#
-#if not st.session_state.chat_history_exported:
-#    # This code runs during every interaction, simulating session activity tracking
-#    st.on_event("app_shutdown", export_chat_history)  # Hypothetical event trigger'''
