@@ -85,7 +85,16 @@ st.markdown('''
     border-radius: 4px;
     font-size: 0.9rem;
 }
-
+.feedback-container {
+    background-color: #ffffff;
+    color: black;
+    border: 2px solid #6B7DBA;
+    padding: 12px;
+    margin: 10px 0;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+            
 /* Key Points Section Styling */
 
 /* Bold Text Styling */
@@ -101,6 +110,8 @@ if "chat_history" not in st.session_state:
     st.session_state.chat_history = []
 if "show_references_per_message" not in st.session_state:
     st.session_state.show_references_per_message = {}
+if "feedback_per_message" not in st.session_state:
+    st.session_state.feedback_per_message = {}
 
 # Header
 header_container = st.container()
@@ -124,6 +135,21 @@ with st.sidebar:
         st.write("Retrieving Information From: ", f'\n :red[{selected_option}]')
         indexname = get_indexname(selected_option)
 
+    name = st.text_input("What is your name?")
+
+    import json
+    import datetime
+    #'''
+    if st.button("Export Chat History"):
+    #@if st.session_state.
+        # Filepath to save JSON
+        timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+        file_path = f"{name}_{timestamp}_chat_history.json"
+        with open(file_path, "w") as json_file:
+            json.dump(st.session_state.chat_history, json_file, indent=4)
+        st.success(f"Chat history exported to `{file_path}`!")
+        pass
+
 with header_container:
     # Display the image
     #st.image("ClientDirective.svg", width=300,use_container_width=True)  # Adjust the path and width as needed
@@ -133,6 +159,8 @@ with header_container:
 
 def toggle_references(message_id):
     st.session_state.show_references_per_message[message_id] = not st.session_state.show_references_per_message.get(message_id, False)
+def toggle_report(message_id):
+    st.session_state.feedback_per_message[message_id] = not st.session_state.feedback_per_message.get(message_id, False)
 
 import os
 
@@ -173,17 +201,19 @@ def format_message_content(content):
     else:
         # Handle non-list content with proper margins
         return f'<p style="margin: 8px 0px;">{content}</p>'
-    
+
 def display_message(role, content, message_id, references=None):
     """
-    Display chat messages with proper formatting and reference handling.
-    
-    Args:
-        role (str): 'user' or 'assistant'
-        content (str): message content
-        message_id (int): unique message identifier
-        references (str, optional): reference content for assistant messages
+    Display chat messages with feedback mechanism
     """
+    # Initialize session state variables if they are not already present
+    if 'feedback_modal_active' not in st.session_state:
+        st.session_state.feedback_modal_active = {}
+    if 'show_references_per_message' not in st.session_state:
+        st.session_state.show_references_per_message = {}
+    if 'submitted_feedback' not in st.session_state:
+        st.session_state.submitted_feedback = {}
+
     with st.container():
         if role == "user":
             col1, col2 = st.columns([9, 1])
@@ -200,38 +230,101 @@ def display_message(role, content, message_id, references=None):
             with col1:
                 st.image(bot_avatar_path, width=40)
             with col2:
-                # Display content directly for assistant's message
+                # Assistant message display
                 st.markdown(f"""
                     <div class="bot-message-container">
                         <div class="message-content assistant-message">{content}</div>
                     </div>
                 """, unsafe_allow_html=True)
                 
-                # Handle references section
-                if references:
-                    ref_button = st.button(
-                        "📑 References" if not st.session_state.show_references_per_message.get(message_id, False) 
-                        else "❌ Hide",
-                        key=f"ref_toggle_{message_id}",
-                        use_container_width=False
-                    )
+                # Buttons for References and Feedback
+                col_ref, col_feed = st.columns([2, 1])
+                
+                with col_ref:
+                    # References Button
+                    ref_button = None  # Initialize ref_button
+                    if references:
+                        ref_button = st.button(
+                            "📑 References" if not st.session_state.show_references_per_message.get(message_id, False) 
+                            else "❌ Hide References",
+                            key=f"ref_toggle_{message_id}",
+                            use_container_width=False
+                        )
                     
-                    if ref_button:
-                        toggle_references(message_id)
+                    if ref_button:  # Toggle references visibility
+                        st.session_state.show_references_per_message[message_id] = not st.session_state.show_references_per_message.get(message_id, False)
                     
                     if st.session_state.show_references_per_message.get(message_id, False):
                         st.markdown(f"""
                             <div class="reference-container">{references}</div>
                         """, unsafe_allow_html=True)
 
+                with col_feed:
+
+                    # Feedback Button
+                    feedback_button_label = "📝 Feedback" if not st.session_state.feedback_modal_active.get(message_id, False) else "❌ Hide Feedback"
+                    if st.button(feedback_button_label, key=f"feedback_button_{message_id}"):
+
+                        # Toggle feedback modal visibility
+                        st.session_state.feedback_modal_active[message_id] = not st.session_state.feedback_modal_active.get(message_id, False)
+
+                        # Show feedback dialog if active
+                        if st.session_state.feedback_modal_active.get(message_id, False):
+                            st.dialog("Tell us your thoughts!")(feedback_msg)(message_id)
+
+def feedback_msg(item):
+    """
+    Show feedback dialog for the message.
+    """
+    # Ensure submitted_feedback is a list (not a dict)
+    if 'submitted_feedback' not in st.session_state or not isinstance(st.session_state.submitted_feedback, list):
+        st.session_state.submitted_feedback = []  # Initialize as a list if it's not already a list
+
+    # Display feedback form
+    st.write(f"Give feedback for message {item}")
+
+    feedback_type = st.selectbox(
+        "What type of feedback do you have?",
+        ['Select Feedback Type', 'Accuracy', 'Clarity', 'Completeness', 'Other'],
+        key=f"feedback_type_{item}"
+    )
+    
+    reason = st.text_input("Because...", key=f"reason_{item}")
+    improv_ref = st.text_input("Any supporting resources...", key=f"improv_ref_{item}")
+    
+    if st.button("Submit", key=f"submit_{item}"):
+        # Store feedback in session state
+        st.session_state.vote = {"item": item, "reason": reason, "feedback_type": feedback_type, "improv_ref":improv_ref}
+        
+        # Append the feedback to the submitted_feedback list
+        st.session_state.submitted_feedback.append(st.session_state.vote)
+        
+        # Create a feedback entry to append to the chat history
+        feedback_content = f"Feedback for message {item}: {feedback_type} - {reason}"
+
+        # Append the feedback to chat_history
+        if 'chat_history' not in st.session_state:
+            st.session_state.chat_history = []
+            
+        st.session_state.chat_history.append({
+            "role": "feedback",  # Assign a role for feedback
+            "content": feedback_content,
+            "message_id": item,  # Reference the message this feedback corresponds to
+            "feedback": st.session_state.vote  # Store the feedback details
+        })
+        
+        st.success("Thank you for your feedback!")
+
+
 # Display chat history
 for idx, message in enumerate(st.session_state.chat_history):
-    display_message(
-        message["role"], 
-        message["content"], 
-        idx,
-        message.get("references") if message["role"] == "assistant" else None
-    )
+    if message["role"] != "feedback":  # Exclude feedback messages
+        display_message(
+            message["role"], 
+            message["content"], 
+            idx,
+            message.get("references") if message["role"] == "assistant" else None
+        )
 
 # Get user input
 text = st.chat_input("Drop your question...")
@@ -274,3 +367,22 @@ if st.session_state.chat_history and st.session_state.chat_history[-1]["role"] =
 
     # Display the bot's response
     display_message("assistant", bot_answer, message_id, references)
+
+
+#'''
+#
+## Auto-export chat history
+## Function to export chat history
+#'''def export_chat_history():
+#    timestamp = datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')
+#    file_path = f"{timestamp}_chat_history_{st.session_state.session_id}.json"
+#    with open(file_path, "w") as json_file:
+#        json.dump(st.session_state.chat_history, json_file, indent=4)
+#    st.session_state.chat_history_exported = True  # Avoid repeated exports
+#
+#if "chat_history_exported" not in st.session_state:
+#    st.session_state.chat_history_exported = False
+#
+#if not st.session_state.chat_history_exported:
+#    # This code runs during every interaction, simulating session activity tracking
+#    st.on_event("app_shutdown", export_chat_history)  # Hypothetical event trigger'''

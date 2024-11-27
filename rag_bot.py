@@ -37,17 +37,25 @@ def bot_model(text, indexname, chat_history):
         model="text-embedding-3-small",
         api_key=AZURE_API_KEY,
         azure_endpoint=AZURE_OPENAI_ENDPOINT,
-        api_version="2023-05-15"
+        api_version="2023-05-15",
+        dimensions= 1536
     )
     
     # Initialize chat model
-    model = AzureChatOpenAI(
-        model="gpt-4o-mini-2024-07-18",
-        azure_deployment="gpt-4o-mini",
-        api_key=AZURE_API_KEY,
-        azure_endpoint=AZURE_OPENAI_ENDPOINT,
-        api_version="2023-03-15-preview"
-    )
+    #model = AzureChatOpenAI(
+    #    model="gpt-4o-mini-2024-07-18",
+    #    azure_deployment="gpt-4o-mini",
+    #    api_key=AZURE_API_KEY,
+    #    azure_endpoint=AZURE_OPENAI_ENDPOINT,
+    #    api_version="2023-03-15-preview"
+    #)
+
+    model = AzureChatOpenAI(model="gpt-4o-2024-08-06",
+            azure_deployment="gpt-4o",
+            api_key='8dd26d2d746041fe90a8892f68806c3d',
+            azure_endpoint="https://ocr-chatbot-mccalla.openai.azure.com/",
+            api_version="2024-08-01-preview"
+        )
     
     # Set up Azure Cognitive Search
     vector_store_address = f"https://{CDR_AZURE_COGNITIVE_SEARCH_SERVICE_NAME}.search.windows.net"
@@ -87,7 +95,7 @@ def bot_model(text, indexname, chat_history):
         
         # Simple query detection prompt
         simple_query_prompt = ChatPromptTemplate.from_messages([
-            ("system", """Determine if this is a simple query that doesn't require document lookup.
+            ("system", """Your name is McCalla Client Directive Chatbots. Determine if this is a simple query that doesn't require document lookup.
             Simple queries include:
             - Greetings (hi, hello, hey)
             - Basic math (1+1, 2*3)
@@ -106,12 +114,13 @@ def bot_model(text, indexname, chat_history):
         # Create prompts
         base_prompt = ChatPromptTemplate.from_messages([
             ("system", 
-                """Answer the question based on the following context: {context}.
-
-                Always attempt to answer the {question} based on the {context}.
+                """
+                Your name is McCalla Client Directive Chatbots. Your task is to answer the {question} based on the following context: {context}.
 
                 The data you've been fed is confidential therefore, you must provide the best answer to the {question} based on the {context}. 
-                You may receive question that is not related to the {context} but still you need to answer without any hesitant. 
+                You may receive {question} that is not related to the {context} but still you need to answer without any hesitant. 
+
+                You also need to be polite and professional when answering.
 
                 Format the response such that each bullet point ('-', '▪', '•') or numbered point ('1.', '2.') starts on a new line but make sure to differentiate the list heading. 
                 Do not add extra blank lines.
@@ -123,7 +132,7 @@ def bot_model(text, indexname, chat_history):
                 1. Sedan - A standard car with a trunk and seating for 4-5 people.
                 2. SUV (Sport Utility Vehicle) - Larger, with higher ground clearance and often capable of off-road driving.
                 3. Hatchback - A car with a rear door that swings upward, offering a larger cargo space.
-                                """),
+                """),
             MessagesPlaceholder(variable_name="chat_history"),
             ("human", "{question}")
             ])
@@ -172,10 +181,7 @@ def bot_model(text, indexname, chat_history):
                 filtered_docs.append(doc)
                 max_similarity = max(max_similarity, score)
             
-            print("Retrieved docs count:", len(filtered_docs))
-            [print(f"Score: {doc.metadata['similarity_score']:.2%}") for doc in filtered_docs]
-            
-            return filtered_docs, max_similarity >= 0.65  # Return docs and whether max similarity meets threshold
+            return filtered_docs, max_similarity >= 0.60  # Return docs and whether max similarity meets threshold
         
         def handle_simple_query(input_dict):
             """Handle simple queries and complex queries with dynamic citation inclusion."""
@@ -265,7 +271,6 @@ def bot_model(text, indexname, chat_history):
             answer = format_text(output['cited_answer']['answer'])
             citations = output['cited_answer']['citations']
             docs = output['docs']
-            print("DOCS: ", docs)
 
             if citations and len(citations) > 0:
                 for idx, citation_idx in enumerate(citations):
@@ -300,7 +305,7 @@ def bot_model(text, indexname, chat_history):
         vectorstore=vectorstore,
         llm_model=model
     )
-    
+
     # Get and format response
     response = get_response(
         chain=chain,
